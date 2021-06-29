@@ -1,11 +1,18 @@
 from django.shortcuts import render
+from mainapp.models import Product
+
 
 def index(request):
-    return render(request, "index.html")
+    title = 'магазин'
+
+    products = Product.objects.all()[:3]
+
+    context = {
+        'title': title,
+        'products': products,
+    }
+    return render(request, 'geekshop/index.html', context=context)
 
 
 def contacts(request):
-    return render(request, "contact.html")
-
-def products(request):
-    return render(request, "products.html")
+    return render(request, 'geekshop/contact.html')
