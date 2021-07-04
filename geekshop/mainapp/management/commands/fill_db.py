@@ -1,4 +1,4 @@
-iimport os
+import os
 import json
 
 from django.contrib.auth.models import User

@@ -25,8 +25,7 @@
       "description": "",
       "price": "14500.00",
       "quantity": 20
-  }
-    [
+  },
   {
       "category": "Стулья",
       "name": "Синий стул",
@@ -54,5 +53,4 @@
       "price": "24500.00",
       "quantity": 20
   }
-]
 ]
