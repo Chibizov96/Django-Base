@@ -1,10 +1,14 @@
 import random
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, get_object_or_404
+from django.views import View
+from django.views.generic import DetailView
+from django.views.generic.base import ContextMixin, TemplateResponseMixin, TemplateView
 
 from basketapp.models import Basket
+from geekshop.views import getjson
 from mainapp.models import ProductCategory, Product
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 def get_basket(user):
@@ -15,75 +19,81 @@ def get_basket(user):
 
 
 def get_hot_product():
-    products = Product.objects.all()
-
-    return random.sample(list(products), 1)[0]
+    return random.sample(list(Product.objects.all()), 1)[0]
 
 
 def get_same_products(hot_product):
-    same_products = Product.objects.filter(category=hot_product.category).exclude(pk=hot_product.pk)
-
-    return same_products
+    return Product.objects.filter(category=hot_product.category).exclude(pk=hot_product.pk)[:3]
 
 
-def products(request, pk=None, page=1):
-    title = 'продукты/каталог'
-    basket = get_basket(request.user)
+class ProductsView(TemplateView):
+    template_name = 'products.html'
 
+    def get_context_data(self, **kwargs):
+        extra_context = super().get_context_data(**kwargs)
+        extra_context['general_menu_links'] = getjson('general_menu_links')
+        extra_context['title'] = 'Магазин/Продукция'
+        extra_context['general_menu_links'] = ProductCategory.objects.all()
+        extra_context['same_products'] = get_same_products(get_hot_product())
+        extra_context['hot_product'] = get_hot_product()
+        extra_context['basket'] = get_basket(self.request.user)
+        return extra_context
+
+
+def products(request):
+    title = 'магазин/продукция'
     hot_product = get_hot_product()
-    same_products = get_same_products(hot_product)
-
-    links_menu = ProductCategory.objects.all()
-    products = Product.objects.all().order_by('price')
-
-    if pk is not None:
-        if pk == 0:
-            products = Product.objects.filter(is_deleted=False).order_by('price')
-            category = {'pk': 0, 'name': 'все'}
-        else:
-            category = get_object_or_404(ProductCategory, pk=pk)
-            products = Product.objects.filter(is_deleted=False, category__pk=pk).order_by('price')
-
-        paginator = Paginator(products, 2)
-
-        try:
-            products_paginator = paginator.page(page)
-        except PageNotAnInteger:
-            products_paginator = paginator.page(1)
-        except EmptyPage:
-            products_paginator = paginator.page(paginator.num_pages)
-
-        context = {
-            'title': title,
-            'links_menu': links_menu,
-            'hot_product': hot_product,
-            'same_products': same_products,
-            'products': products_paginator,
-            'category': category,
-        }
-        return render(request=request, template_name='mainapp/products.html', context=context)
-
-
     context = {
+        'general_menu_links': getjson('general_menu_links'),
         'title': title,
-        'links_menu': links_menu,
+        'products_category_menu': ProductCategory.objects.all(),
+        'same_products': get_same_products(hot_product),
         'hot_product': hot_product,
-        'same_products': same_products,
-        'products': products,
-        'basket': basket,
+        'basket': get_basket(request.user),
     }
-
-    return render(request=request, template_name='mainapp/products.html', context=context)
+    return render(request, 'products.html', context)
 
 
 def product(request, pk):
-    title = 'продукты'
-
+    title = f'Продукты/{(get_object_or_404(Product, pk=pk)).short_desc}'
     context = {
         'title': title,
-        'links_menu': ProductCategory.objects.all(),
+        'general_menu_links': getjson('general_menu_links'),
+        'products_category_menu': ProductCategory.objects.all(),
         'product': get_object_or_404(Product, pk=pk),
         'basket': get_basket(request.user),
     }
 
-    return render(request, 'mainapp/product.html', context)
+    return render(request, 'product.html', context)
+
+
+def group_of_products(request, slug, page=2):
+    title = f'магазин/продукция/{slug}'
+    basket = []
+    if request.user.is_authenticated:
+        basket = get_basket(request.user)
+    if slug == 'products_all':
+        products = Product.objects.filter(is_deleted=False).order_by('price')
+        category = {
+            'name': 'все',
+            'href': 'products_all',
+        }
+    else:
+        products = Product.objects.filter(category__href=slug, is_deleted=False)
+        category = get_object_or_404(ProductCategory, href=slug)
+    paginator = Paginator(products, 2)
+    try:
+        products_paginator = paginator.page(page)
+    except PageNotAnInteger:
+        products_paginator = paginator.page(1)
+    except EmptyPage:
+        products_paginator = paginator.page(paginator.num_pages)
+    context = {
+        'general_menu_links': getjson('general_menu_links'),
+        'title': title,
+        'products_category_menu': ProductCategory.objects.all(),
+        'products': products_paginator,
+        'category': category,
+        'basket': basket,
+    }
+    return render(request, 'groups_products.html', context)
