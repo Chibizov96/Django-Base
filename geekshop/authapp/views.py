@@ -1,21 +1,23 @@
-from django.core.mail import send_mail
 from django.contrib import auth
+from django.core.mail import send_mail
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
 from authapp.forms import ShopUserLoginForm, ShopUserRegisterForm, ShopUserEditForm
+from authapp.forms import ShopUserProfileEditForm
+from authapp.models import ShopUser
 from geekshop import settings
+from django.db import transaction
 
 
 def send_verify_email(user):
     verify_link = reverse('auth:verify', args=[user.email, user.activation_key])
 
-    title = f'Активация на сайте, пользователя - {user.username}'
+    title = f'Активация пользователя {user.username}'
 
-    message = f'Для активации вашей учетной {user.email} записи, на портале {settings.DOMAIN_NAME}' \
-              f' перейдите по ссылке: \n{settings.DOMAIN_NAME}{verify_link}'
-
+    message = f'Для активации учетной записи {user.email} на сайте {settings.DOMAIN_NAME}' \
+              f'перейдите по ссылке \n{settings.DOMAIN_NAME}{verify_link}'
     return send_mail(title, message, settings.EMAIL_HOST_USER, [user.email], fail_silently=False)
 
 
@@ -39,11 +41,13 @@ def login(request):
     title = 'Вход в магазин'
     login_form = ShopUserLoginForm(data=request.POST)
     _next = request.GET['next'] if 'next' in request.GET.keys() else ''
-    if request.POST and login_form.is_valid():
+    #if request.POST and login_form.is_valid():
+    if request.method == 'POST' and login_form.is_valid():
         username = request.POST['username']
         password = request.POST['password']
         user = auth.authenticate(username=username, password=password)
         if user and user.is_active:
+            auth.login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             auth.login(request, user)
             if 'next' in request.POST.keys():
                 return HttpResponseRedirect(request.POST['next'])
@@ -61,6 +65,7 @@ def logout(request):
     auth.logout(request)
     return HttpResponseRedirect(reverse('index'))
 
+
 def register(request):
     title = 'регистрация'
     if request.method == 'POST':
@@ -68,10 +73,10 @@ def register(request):
         if register_form.is_valid():
             user = register_form.save()
             if send_verify_email(user):
-                print('Сообщение отправлено.')
+                print('Письмо отправлено')
                 return HttpResponseRedirect(reverse('auth:login'))
             else:
-                print('Не удалось отправить сообщение.')
+                print('Письмо не отправлено')
                 return HttpResponseRedirect(reverse('auth:login'))
     else:
         register_form = ShopUserRegisterForm()
@@ -82,17 +87,24 @@ def register(request):
     return render(request, 'authapp/register.html', context)
 
 
+@transaction.atomic
 def edit(request):
-    title = 'редактирование'
+    title = 'СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ'
+
     if request.method == 'POST':
         edit_form = ShopUserEditForm(request.POST, request.FILES, instance=request.user)
-        if edit_form.is_valid():
+        profile_form = ShopUserProfileEditForm(request.POST, instance=request.user.shopuserprofile)
+        if edit_form.is_valid() and profile_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse('auth:edit'))
     else:
         edit_form = ShopUserEditForm(instance=request.user)
+        profile_form = ShopUserProfileEditForm(instance=request.user.shopuserprofile)
+
     context = {
         'title': title,
-        'edit_form': edit_form
+        'edit_form': edit_form,
+        'profile_form': profile_form,
     }
+
     return render(request, 'authapp/edit.html', context)
