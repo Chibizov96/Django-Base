@@ -1,16 +1,14 @@
 {% extends 'adminapp/base.html' %}
 {% load static %}
 
-
 {% block content %}
-        <form class="form-row"  method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input class="form-control" type="submit" value="создать">
-        </form>
-        <button class="btn btn-round form-control last">
-            <a href="{% url 'admin_stuff:products' product.0.category.pk %}" class="">
-                назад
-            </a>
-        </button>
+    <div class="col-3 mx-auto">
+    <form class="form-horizontal" action="{% url 'admin_staff:product_create' category.pk %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ update_form.as_p }}
+
+        <input class="form-control" type="submit" value="Создать">
+    </form>
+    </div>
+
 {% endblock %}
