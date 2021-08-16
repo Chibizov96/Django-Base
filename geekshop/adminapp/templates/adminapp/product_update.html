@@ -3,14 +3,22 @@
 
 
 {% block content %}
-        <form class="form-row"  method="post" enctype="multipart/form-data">
+    <div class="row">
+        <div class="text-center">
+            <img src="/media/{{ product.image }}" class="w-25">
+        </div>
+    </div>
+    <div class="row">
+        <form class="form-horizontal" action="{% url 'admin_staff:product_update' product.pk %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}
-            <input class="form-control" type="submit" value="обновить">
+            {{ update_form.as_p }}
+            <input class="form-control" type="submit" value="сохранить">
         </form>
         <button class="btn btn-round form-control last">
-            <a href="{% url 'admin_stuff:products' object.category.pk %}" class="">
-                назад
+            <a href="{% url 'admin_staff:categories' %}" class="">
+                к категориям
             </a>
         </button>
+    </div>
+    </div>
 {% endblock %}
