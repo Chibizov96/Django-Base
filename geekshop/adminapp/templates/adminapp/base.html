@@ -9,10 +9,10 @@
             {{ title|title }}
         {% endblock %}
     </title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-<!--        <link rel="stylesheet" type="text/css" href="{% static 'geekshop/style.css' %}">-->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="{% static 'geekshop/style.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'adminapp/style.css' %}">
-        <link rel="stylesheet" type="text/css" href='https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css'>
+        <link rel="stylesheet" type="text/css"href='https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css'>
         <link rel="stylesheet" type="text/css" href="{% static 'geekshop/fonts/font-awesome/css/font-awesome.css' %}">
 
     {% block css %}
@@ -33,7 +33,7 @@
         <div>
             <a href="{% url 'index' %}" class="nav_logo">
                 <i class='bx bx-layer nav_logo-icon'></i>
-                <span class="nav_logo-name">Админка</span>
+                <span class="nav_logo-name">Admin`ka</span>
             </a>
             {% include 'adminapp/inludes/inc_admin_menu.html' %}
         </div>
